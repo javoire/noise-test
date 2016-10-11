@@ -22,8 +22,8 @@ int main(int argc, char** argv)
 	double z = 128;
 	image.SetSize(256, 256);
 	// loop over 128x128 plane, xyz coords
-	for (int x = -128; x < 128; x++) {
-		for (int y = 128; y > -128; y--)
+	for (double x = -128; x < 128; x++) {
+		for (double y = 128; y > -128; y--)
 		{
 			// get real length
 			double powX = pow(x, 2);
@@ -37,14 +37,28 @@ int main(int argc, char** argv)
 				//+ pow(z / dLength, 2));
 
 			// get noise for unit vector (as if on sphere)
-			double dValue = perlin.GetValue((x / dLength*10), (y / dLength*10), (z / dLength*10));
+			double dScale = 0.25;
+			double dValue = perlin.GetValue(((x / dScale) / dLength), ((y / dScale) / dLength), ((z / dScale) / dLength));
 
 			/*double dUnitLength = sqrt(pow(x / dLength, 2)
 				+ pow(y / dLength, 2)
 				+ pow(z / dLength, 2));
 				*/
 
-			uint8 value = (uint8)((uint)(dValue * 255.0) & 0xff);
+			double dValueNormalized = (dValue + 1) / 2;
+
+	
+			// for some reason it flips if it goes to close to 0 or 1...
+			if (dValueNormalized > 0.999)
+			{
+				dValueNormalized = 0.999;
+			}
+			if (dValueNormalized < 0.001)
+			{
+				dValueNormalized = 0.001;
+			}
+
+			uint8 value = (uint8)(dValueNormalized * 255.0);
 
 			Color color(value, value, value, 1);
 
