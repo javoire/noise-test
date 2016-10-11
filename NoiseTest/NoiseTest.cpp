@@ -15,9 +15,7 @@ int main(int argc, char** argv)
 {
 
 	Perlin perlin;
-	NoiseMap heightMap;
 	Image image;
-	Color color;
 
 	double z = 128;
 	image.SetSize(256, 256);
@@ -68,22 +66,6 @@ int main(int argc, char** argv)
 	}
 
 	// write image
-
-	/*
-	utils::NoiseMapBuilderSphere heightMapBuilder;
-	heightMapBuilder.SetSourceModule(perlin);
-	heightMapBuilder.SetDestNoiseMap(heightMap);
-	heightMapBuilder.SetDestSize(512, 256);
-	heightMapBuilder.SetBounds(-90.0, 90.0, -180.0, 180.0);
-	heightMapBuilder.Build();
-
-	utils::RendererImage renderer;
-	utils::Image image;
-	renderer.SetSourceNoiseMap(heightMap);
-	renderer.SetDestImage(image);
-	renderer.Render();
-	*/
-
 	WriterBMP writer;
 	writer.SetSourceImage(image);
 	writer.SetDestFilename("test.bmp");
