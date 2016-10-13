@@ -56,7 +56,7 @@ public:
 		Image imagePlusZ;
 		Image imageMinusZ;
 
-		int size = 128;
+		int size = 256;
 		int radius = size / 2;
 		int x;
 		int y;
@@ -69,14 +69,14 @@ public:
 		imagePlusZ.SetSize(size, size);
 		imageMinusZ.SetSize(size, size);
 
-		// loop over 128x128 plane, xyz coords
+		// loop over 128x128 plane, uv coords
 		for (int u = 0; u < size; u++)
 		{
 			for (int v = 0; v < size; v++)
 			{
 				//// x+ side
 				x = radius;
-				y = v + radius;
+				y = v - radius;
 				z = u - radius;
 
 				// apply value on cube face
@@ -84,43 +84,43 @@ public:
 
 				//// x- side
 				x = -radius;
-				y = v + radius;
-				z = u + radius;
+				y = v - radius;
+				z = u - radius;
 
 				// apply value on cube face
-				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
+				imageMinusX.SetValue(u, v, GetColorAtCoords(x, y, z));
 
 				//// y+ side
 				y = radius;
-				x = v + radius;
+				x = v - radius;
 				z = u - radius;
 
 				// apply value on cube face
-				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
+				imagePlusY.SetValue(u, v, GetColorAtCoords(x, y, z));
 
 				//// y- side
 				y = -radius;
-				x = v + radius;
+				x = v - radius;
 				z = u - radius;
 
 				// apply value on cube face
-				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
+				imageMinusY.SetValue(u, v, GetColorAtCoords(x, y, z));
 
 				//// z+ side
 				z = radius;
-				x = u + radius;
-				y = v + radius;
+				x = u - radius;
+				y = v - radius;
 
 				// apply value on cube face
-				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
+				imagePlusZ.SetValue(u, v, GetColorAtCoords(x, y, z));
 
 				//// z- side
 				z = -radius;
 				x = u - radius;
-				y = v + radius;
+				y = v - radius;
 
 				// apply value on cube face
-				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
+				imageMinusZ.SetValue(u, v, GetColorAtCoords(x, y, z));
 			}
 		}
 
@@ -145,6 +145,15 @@ public:
 
 		// get noise value at sphere surface [-1,1]
 		double noiseVal = perlin.GetValue(vectorSphere.x, vectorSphere.y, vectorSphere.z);
+
+		// for some reason perlin sometimes returns a value out of bounds
+		if (noiseVal > 1)
+		{
+			noiseVal = 1;
+		}
+		else if (noiseVal < -1) {
+			noiseVal = -1;
+		}
 
 		// scale [0,1]
 		noiseVal = (noiseVal + 1) / 2;
