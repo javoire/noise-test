@@ -1,175 +1,177 @@
-// ConsoleApplication1.cpp : Defines the entry point for the console application.
-//
-
 #include "stdafx.h"
 #include <iostream>
 #define _USE_MATH_DEFINES
 #include <noise/noise.h>
+#include <array>
+#include <string>
 #include "noiseutils.h"
 using namespace std;
 using namespace noise;
 using namespace module;
 using namespace utils;
 
+class Vector3
+{
+public:
+	double x;
+	double y;
+	double z;
+
+	Vector3(double _x, double _y, double _z) {
+		x = _x;
+		y = _y;
+		z = _z;
+	};
+
+	double GetLength() {
+		return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+	}
+
+	void Normalize() {
+		double length = GetLength();
+		x = x / length;
+		y = y / length;
+		z = z / length;
+	}
+
+	static Vector3 Normalized(Vector3 v) {
+		Vector3 vector = Vector3(v.x, v.y, v.z);
+		double length = vector.GetLength();
+		vector.x = vector.x / length;
+		vector.y = vector.y / length;
+		vector.z = vector.z / length;
+		return vector;
+	}
+};
+
 class ImageGenerator
 {
 public:
-	static Image RenderOneImage() {
-		Perlin perlin;
-		Image image;
+	static array<Image, 6> GenerateCubeImages() {
+		array<Image, 6> images;
+		Image imagePlusX;
+		Image imageMinusX;
+		Image imagePlusY;
+		Image imageMinusY;
+		Image imagePlusZ;
+		Image imageMinusZ;
 
-		double z = 128;
-		image.SetSize(256, 256);
+		int size = 128;
+		int radius = size / 2;
+		int x;
+		int y;
+		int z;
+
+		imagePlusX.SetSize(size, size);
+		imageMinusX.SetSize(size, size);
+		imagePlusY.SetSize(size, size);
+		imageMinusY.SetSize(size, size);
+		imagePlusZ.SetSize(size, size);
+		imageMinusZ.SetSize(size, size);
+
 		// loop over 128x128 plane, xyz coords
-		for (double x = -128; x < 128; x++) {
-			for (double y = 128; y > -128; y--)
+		for (int u = 0; u < size; u++)
+		{
+			for (int v = 0; v < size; v++)
 			{
-				// get real length
-				double powX = pow(x, 2);
-				double powY = pow(y, 2);
-				double powZ = pow(z, 2);
-				double dLength = abs(sqrt(powX + powY + powZ));
+				//// x+ side
+				x = radius;
+				y = v + radius;
+				z = u - radius;
 
-				// get unit length (as if on a sphere)
-				//double dUnitLength = sqrt(pow(x / dLength, 2)
-				//+ pow(y / dLength, 2)
-				//+ pow(z / dLength, 2));
+				// apply value on cube face
+				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
 
-				// get noise for unit vector (as if on sphere)
-				double dScale = 0.25;
-				double dValue = perlin.GetValue(((x / dScale) / dLength), ((y / dScale) / dLength), ((z / dScale) / dLength));
+				//// x- side
+				x = -radius;
+				y = v + radius;
+				z = u + radius;
 
-				/*double dUnitLength = sqrt(pow(x / dLength, 2)
-				+ pow(y / dLength, 2)
-				+ pow(z / dLength, 2));
-				*/
+				// apply value on cube face
+				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
 
-				double dValueNormalized = (dValue + 1) / 2;
+				//// y+ side
+				y = radius;
+				x = v + radius;
+				z = u - radius;
 
-				// for some reason it flips if it goes to close to 0 or 1...
-				if (dValueNormalized > 0.999)
-				{
-					dValueNormalized = 0.999;
-				}
-				if (dValueNormalized < 0.001)
-				{
-					dValueNormalized = 0.001;
-				}
+				// apply value on cube face
+				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
 
-				uint8 value = (uint8)(dValueNormalized * 255.0);
+				//// y- side
+				y = -radius;
+				x = v + radius;
+				z = u - radius;
 
-				Color color(value, value, value, 1);
+				// apply value on cube face
+				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
 
-				// set value on image
-				image.SetValue(x + 128, abs(y - 128), color);
+				//// z+ side
+				z = radius;
+				x = u + radius;
+				y = v + radius;
 
-				return image;
+				// apply value on cube face
+				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
+
+				//// z- side
+				z = -radius;
+				x = u - radius;
+				y = v + radius;
+
+				// apply value on cube face
+				imagePlusX.SetValue(u, v, GetColorAtCoords(x, y, z));
 			}
 		}
+
+		images[0] = imagePlusX;
+		images[1] = imageMinusX;
+		images[2] = imagePlusY;
+		images[3] = imageMinusX;
+		images[4] = imagePlusZ;
+		images[5] = imageMinusZ;
+
+		int numbers[3];
+
+		return images;
 	}
 
-	static Image RenderSixImages() {
-
+	static Color GetColorAtCoords(double x, double y, double z) {
 		Perlin perlin;
-		// create 6 empty images
-		// xPlus xMins yPlus yMinus zPlus zMinus
-		Image imageXplus;
-		Image imageXminus;
-		Image imageYplus;
-		Image imageYminus;
-		Image imageZplus;
-		Image imageZminus;
+		Vector3 vectorCube = Vector3(x, y, z);
 
-		imageXplus.SetSize(90, 90);
+		// normalize vector to get sphere surface
+		Vector3 vectorSphere = Vector3::Normalized(vectorCube);
 
-		// debug
-		int countX = 0;
-		int countY = 0;
-		int countZ = 0;
+		// get noise value at sphere surface [-1,1]
+		double noiseVal = perlin.GetValue(vectorSphere.x, vectorSphere.y, vectorSphere.z);
 
-		// loop over lat and lon, 0-360 0-360
-		for (int lat = 0; lat < 360; lat++)
-		{
-			for (int lon = 0; lon < 360; lon++)
-			{
-				double latRad = lat * (M_PI / 180);
-				double lonRad = lon * (M_PI / 180);
-				
-				// get x,y,z value for position
-				// i.e. convert polar to radial
-				// radius is implied to be 1 here:
-				double x = cos(latRad);
-				double y = sin(latRad);
-				double z = sin(lonRad);
+		// scale [0,1]
+		noiseVal = (noiseVal + 1) / 2;
 
-				double xAbs = abs(x);
-				double yAbs = abs(y);
-				double zAbs = abs(z);
+		// scale to color range [0,255]
+		uint8 colorValue = (noiseVal * 255);
 
-				// pick perlin noise value 
-				double noiseValue = perlin.GetValue(x, y, z);
-				uint8 uValue = (uint8)(abs((noiseValue+1)/2) * 255.0);
+		// get color 
+		Color color = Color(colorValue, colorValue, colorValue, 1);
 
-				// figure out the coordinate on the image to set the value to
-
-				// figure out which plane / image we're pointing at
-				// i.e. which image to set a pixel color value to
-				if (xAbs > yAbs && xAbs >= zAbs) {
-					// x direction
-					countX++;
-
-					if (x >= 0) {
-						// xPlus direction
-
-						imageXplus.SetValue(lat, lon, Color(uValue, uValue, uValue, 1));
-					}
-					else {
-						// xMinus direction
-					}
-				}
-				else if (yAbs > xAbs && yAbs >= zAbs) {
-					// y direction
-					countY++;
-
-					if (y >= 0) {
-						// yPlus direction
-						//cout << "lol";
-					}
-					else {
-						// yMinus direction
-					}
-				}
-				else if (zAbs > xAbs && zAbs >= yAbs) {
-					// z direction
-					countZ++;
-
-					if (z >= 0) {
-						// zPlus direction
-						//cout << "lol";
-					}
-					else {
-						// zMinus direction
-					}
-				}
-			}
-		}
-
-		double totalCount = countX + countY + countZ;
-		return imageXplus;
+		return color;
 	}
 };
 
 int main(int argc, char** argv)
 {
-
-	//Image image = ImageGenerator::RenderOneImage();
-	Image image = ImageGenerator::RenderSixImages();
-
-	// write image
+	array<Image, 6> images = ImageGenerator::GenerateCubeImages();
 	WriterBMP writer;
-	writer.SetSourceImage(image);
-	writer.SetDestFilename("test2.bmp");
-	writer.WriteDestFile();
+
+	int count = 0;
+	for (Image image : images) {
+		writer.SetSourceImage(image);
+		writer.SetDestFilename("image" + to_string(count) + ".bmp");
+		writer.WriteDestFile();
+		count++;
+	}
+
 
 	return 0;
 }
