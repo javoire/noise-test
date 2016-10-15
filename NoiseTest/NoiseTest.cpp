@@ -4,6 +4,7 @@
 #include <noise/noise.h>
 #include <array>
 #include <string>
+#include <algorithm>
 #include "noiseutils.h"
 using namespace std;
 using namespace noise;
@@ -23,20 +24,20 @@ public:
 		z = _z;
 	};
 
-	double GetLength() {
+	double GetLength() const {
 		return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 	}
 
 	void Normalize() {
-		double length = GetLength();
+		auto length = GetLength();
 		x = x / length;
 		y = y / length;
 		z = z / length;
 	}
 
 	static Vector3 Normalized(Vector3 v) {
-		Vector3 vector = Vector3(v.x, v.y, v.z);
-		double length = vector.GetLength();
+		auto vector = Vector3(v.x, v.y, v.z);
+		auto length = vector.GetLength();
 		vector.x = vector.x / length;
 		vector.y = vector.y / length;
 		vector.z = vector.z / length;
@@ -56,8 +57,8 @@ public:
 		Image imagePlusZ;
 		Image imageMinusZ;
 
-		int size = 256;
-		int radius = size / 2;
+		auto size = 256;
+		auto radius = size / 2;
 		int x;
 		int y;
 		int z;
@@ -70,9 +71,9 @@ public:
 		imageMinusZ.SetSize(size, size);
 
 		// loop over 128x128 plane, uv coords
-		for (int u = 0; u < size; u++)
+		for (auto u = 0; u < size; u++)
 		{
-			for (int v = 0; v < size; v++)
+			for (auto v = 0; v < size; v++)
 			{
 				//// x+ side
 				x = radius;
@@ -131,29 +132,22 @@ public:
 		images[4] = imagePlusZ;
 		images[5] = imageMinusZ;
 
-		int numbers[3];
-
 		return images;
 	}
 
 	static Color GetColorAtCoords(double x, double y, double z) {
 		Perlin perlin;
-		Vector3 vectorCube = Vector3(x, y, z);
+		auto vectorCube = Vector3(x, y, z);
 
 		// normalize vector to get sphere surface
-		Vector3 vectorSphere = Vector3::Normalized(vectorCube);
+		auto vectorSphere = Vector3::Normalized(vectorCube);
 
 		// get noise value at sphere surface [-1,1]
-		double noiseVal = perlin.GetValue(vectorSphere.x, vectorSphere.y, vectorSphere.z);
+		auto noiseVal = perlin.GetValue(vectorSphere.x, vectorSphere.y, vectorSphere.z);
 
 		// for some reason perlin sometimes returns a value out of bounds
-		if (noiseVal > 1)
-		{
-			noiseVal = 1;
-		}
-		else if (noiseVal < -1) {
-			noiseVal = -1;
-		}
+		noiseVal = min(1.0, noiseVal);
+		noiseVal = max(-1.0, noiseVal);
 
 		// scale [0,1]
 		noiseVal = (noiseVal + 1) / 2;
@@ -162,7 +156,7 @@ public:
 		uint8 colorValue = (noiseVal * 255);
 
 		// get color 
-		Color color = Color(colorValue, colorValue, colorValue, 1);
+		auto color = Color(colorValue, colorValue, colorValue, 1);
 
 		return color;
 	}
@@ -173,14 +167,13 @@ int main(int argc, char** argv)
 	array<Image, 6> images = ImageGenerator::GenerateCubeImages();
 	WriterBMP writer;
 
-	int count = 0;
-	for (Image image : images) {
+	auto count = 0;
+	for (auto image : images) {
 		writer.SetSourceImage(image);
 		writer.SetDestFilename("image" + to_string(count) + ".bmp");
 		writer.WriteDestFile();
 		count++;
 	}
-
 
 	return 0;
 }
