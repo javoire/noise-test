@@ -2,6 +2,8 @@
 #include <algorithm>
 #include "noiseutils.h"
 #include "Vector3.cpp"
+#include <iostream>
+#include <random>
 
 #define _USE_MATH_DEFINES
 
@@ -13,7 +15,19 @@ using namespace module;
 class ImageGenerator
 {
 public:
-	static array<Image, 6> GenerateCubeImages() {
+
+	std::mt19937 gen;
+	uniform_real_distribution<> dis;
+	
+	ImageGenerator()
+	{
+		std::random_device rd;
+		gen = std::mt19937(rd());
+		dis = uniform_real_distribution<>(0, 1);
+	}
+
+	array<Image, 6> GenerateCubeImages(int size)
+	{
 		array<Image, 6> images;
 		Image imagePlusX;
 		Image imageMinusX;
@@ -22,11 +36,12 @@ public:
 		Image imagePlusZ;
 		Image imageMinusZ;
 
-		auto size = 256;
 		auto radius = size / 2;
 		int x;
 		int y;
 		int z;
+		auto count = 0;
+		auto totalIterations = size*size;
 
 		imagePlusX.SetSize(size, size);
 		imageMinusX.SetSize(size, size);
@@ -87,7 +102,12 @@ public:
 
 				// apply value on cube face
 				imageMinusZ.SetValue(u, v, GetColorAtCoords(x, y, z));
+
 			}
+
+			/*auto percent = float(count) / float(totalIterations) * 100.0f;
+			cout << percent << endl;
+			count++;*/
 		}
 
 		images[0] = imagePlusX;
@@ -100,25 +120,42 @@ public:
 		return images;
 	}
 
-	static Color GetColorAtCoords(double x, double y, double z) {
+	Color GetColorAtCoords(double x, double y, double z)
+	{
 		Perlin perlin;
 		auto vectorCube = Vector3(x, y, z);
+		auto starBrightnessReduce = 2;
+		auto noiseScale = 4;
+		auto starProbability = 0.001; // %
+		auto noiseSoftness = 2;
 
 		// normalize vector to get sphere surface
 		auto vectorSphere = Vector3::Normalized(vectorCube);
 
 		// get noise value at sphere surface [-1,1]
-		auto noiseVal = perlin.GetValue(vectorSphere.x, vectorSphere.y, vectorSphere.z);
+		auto noiseVal = perlin.GetValue(vectorSphere.x * noiseScale, vectorSphere.y * noiseScale, vectorSphere.z * noiseScale);
 
 		// for some reason perlin sometimes returns a value out of bounds
+		// unfortunately we're clipping the value.
 		noiseVal = min(1.0, noiseVal);
 		noiseVal = max(-1.0, noiseVal);
 
 		// scale [0,1]
 		noiseVal = (noiseVal + 1) / 2;
 
-		// scale to color range [0,255]
-		uint8 colorValue = (noiseVal * 255);
+		// adjust softness. e.g scale to [0.2, 0.8]
+		// scale
+		noiseVal = noiseVal / noiseSoftness;
+		// then "center" the noise noise range 
+		noiseVal += (1 - noiseVal) / 2;
+
+		// this pixel is a star based on probability
+
+		auto rand = dis(gen);
+		auto isStar = rand < starProbability;
+
+		// check if star and scale to color range [0,255]
+		uint8 colorValue = isStar ? (noiseVal * 255 / starBrightnessReduce) : 0;
 
 		// get color 
 		auto color = Color(colorValue, colorValue, colorValue, 1);

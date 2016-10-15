@@ -7,7 +7,8 @@ using namespace utils;
 
 int main(int argc, char** argv)
 {
-	array<Image, 6> images = ImageGenerator::GenerateCubeImages();
+	ImageGenerator generator;
+	auto images = generator.GenerateCubeImages(1024);
 	WriterBMP writer;
 
 	auto count = 0;
