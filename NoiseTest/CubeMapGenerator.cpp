@@ -110,10 +110,12 @@ public:
 			count++;*/
 		}
 
+
+
 		images[0] = imagePlusX;
 		images[1] = imageMinusX;
 		images[2] = imagePlusY;
-		images[3] = imageMinusX;
+		images[3] = imageMinusY;
 		images[4] = imagePlusZ;
 		images[5] = imageMinusZ;
 
