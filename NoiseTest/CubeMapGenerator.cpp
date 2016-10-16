@@ -144,14 +144,7 @@ public:
 		// scale [0,1]
 		noiseVal = (noiseVal + 1) / 2;
 
-		// threshold debug
-		if (noiseVal > 0.7)
-		{
-			noiseVal = 1;
-		} else if (noiseVal <= 0.3) 
-		{
-			noiseVal = 0;
-		}
+		//DebugThreshold(noiseVal);
 
 		// adjust softness. e.g scale to [0, 0.5]
 		// scale
@@ -170,31 +163,55 @@ public:
 		// get color 
 		auto color = Color(colorValue, colorValue, colorValue, 1);
 
-		// debug lines
-		if (abs(vectorSphere.x) > abs(vectorSphere.y)
-			&& vectorSphere.y > 0
-			&& vectorSphere.z < 0.1
-			&& vectorSphere.z > -0.1) // x
+		//DebugLines(vectorSphere, color);
+
+		return color;
+	}
+
+	// Theshold filter to easier see the pattern in each face
+	void DebugThreshold(double& noiseVal)
+	{
+		// threshold debug
+		if (noiseVal > 0.7)
 		{
-			auto strength = x > 0 ? 230 : 60; // positive x is brighter
+			noiseVal = 1;
+		}
+		else if (noiseVal <= 0.3)
+		{
+			noiseVal = 0;
+		}
+	}
+
+	// Decorate debug lines for each face.
+	// x: red
+	// y: green
+	// z: blue
+	// positive direction has brighter color
+	void DebugLines(Vector3& vector, Color& color)
+	{
+		if (abs(vector.x) > abs(vector.y)
+			&& vector.y > 0
+			&& vector.z < 0.1
+			&& vector.z > -0.1) // x
+		{
+			auto strength = vector.x > 0 ? 230 : 60; // positive x is brighter
 			color = Color(uint8(strength), 0, 0, 1);
 		}
-		if (abs(vectorSphere.y) > abs(vectorSphere.x)
-			&& vectorSphere.x > 0
-			&& vectorSphere.z < 0.1
-			&& vectorSphere.z > -0.1) // y
+		if (abs(vector.y) > abs(vector.x)
+			&& vector.x > 0
+			&& vector.z < 0.1
+			&& vector.z > -0.1) // y
 		{
-			auto strength = y > 0 ? 230 : 60;
+			auto strength = vector.y> 0 ? 230 : 60;
 			color = Color(0, uint8(strength), 0, 1);
 		}
-		if (abs(vectorSphere.z) > abs(vectorSphere.y)
-			&& vectorSphere.y > 0
-			&& vectorSphere.x < 0.1
-			&& vectorSphere.x > -0.1) // z
+		if (abs(vector.z) > abs(vector.y)
+			&& vector.y > 0
+			&& vector.x < 0.1
+			&& vector.x > -0.1) // z
 		{
-			auto strength = z > 0 ? 230 : 60;
+			auto strength = vector.z > 0 ? 230 : 60;
 			color = Color(0, 0, uint8(strength), 1);
 		}
-		return color;
 	}
 };
