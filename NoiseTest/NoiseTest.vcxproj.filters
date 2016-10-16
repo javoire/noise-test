@@ -7,9 +7,6 @@
     <ClCompile Include="NoiseTest.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="Vector3.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -20,9 +17,6 @@
   <ItemGroup>
     <ClInclude Include="noiseutils.h">
       <Filter>Lib</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
-      <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="targetver.h">
       <Filter>Headers</Filter>
