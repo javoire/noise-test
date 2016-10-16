@@ -61,11 +61,10 @@ public:
 	{
 		Image cubeMapImage;
 		auto radius = size / 2;
-		int x;
-		int y;
-		int z;
 		auto count = 0;
 		auto totalIterations = size*size;
+		
+		// offset each image by n*size
 		int offset;
 
 		cubeMapImage.SetSize(size*6, size);
@@ -76,22 +75,30 @@ public:
 			for (auto t = 0; t < size; t++)
 			{
 
-				// start in top left corner for each 4 sides (x and y faces)
-				// then tweak u v mapping to achieve desired rotation
-
-				//// x+ side
-				//cubeMapImage.SetValue(v, u, GetColorAtCoords(radius, u - radius, v - radius));
-				cubeMapImage.SetValue(s, t, GetColorAtCoords(-radius, t - radius, radius - s));
+				// st (uv) mapping according to
+				// major axis
+				// direction     target                              sc     tc    ma
+				// ----------    -------------------------------- - -- - -- - -- -
+				// +rx          GL_TEXTURE_CUBE_MAP_POSITIVE_X_EXT   -rz	-ry	  rx
+				// -rx          GL_TEXTURE_CUBE_MAP_NEGATIVE_X_EXT   +rz	-ry	  rx
+				// +ry          GL_TEXTURE_CUBE_MAP_POSITIVE_Y_EXT   +rx	+rz	  ry
+				// -ry          GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_EXT   +rx	-rz	  ry
+				// +rz          GL_TEXTURE_CUBE_MAP_POSITIVE_Z_EXT   +rx	-ry	  rz
+				// -rz          GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_EXT   -rx	-ry	  rz
+				//
+				// http://www.nvidia.com/object/cube_map_ogl_tutorial.html
+				//
+				// but for some reason, the -x and +x sides have to switch places...
 
 				//// x- side
-				// offset by n*size for each of the six images
+				cubeMapImage.SetValue(s, t, GetColorAtCoords(-radius, t - radius, radius - s));
+
+				//// x+ side
 				offset = size;
-				//cubeMapImage.SetValue(size - 1 - v + offset, size - 1 - u, GetColorAtCoords(-radius, u - radius, v - radius));
 				cubeMapImage.SetValue(s + offset, t, GetColorAtCoords(radius, t - radius, s - radius));
 
 				//// y+ side
 				offset = size * 2;
-				//cubeMapImage.SetValue(size - 1 - u + offset, v, GetColorAtCoords(u - radius, radius, v - radius));
 				cubeMapImage.SetValue(s + offset, t, GetColorAtCoords(radius - s, radius, radius - t));
 
 				//// y- side
@@ -106,7 +113,6 @@ public:
 				offset = size * 5;
 				cubeMapImage.SetValue(s + offset, t, GetColorAtCoords(s - radius, t - radius, -radius));
 			}
-
 			/*auto percent = float(count) / float(totalIterations) * 100.0f;
 			cout << percent << endl;
 			count++;*/
