@@ -10,7 +10,7 @@ using namespace utils;
 int main(int argc, char** argv)
 {
 	ImageGenerator generator;
-	auto image = generator.GenerateCubeImages(512);
+	auto image = generator.GenerateCubeImages(1024);
 	//auto testImage = generator.GenerateTestImage(64);
 	WriterBMP writer;
 	

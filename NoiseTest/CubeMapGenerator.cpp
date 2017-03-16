@@ -128,7 +128,7 @@ public:
 		auto starBrightnessReduce = 1;
 		auto noiseScale = 1;
 		auto starProbability = 0.001; // %
-		auto noiseSoftness = 1;
+		double noiseContrast = 0.1;
 
 		// normalize vector to get sphere surface
 		auto vectorSphere = Vector3::Normalized(vectorCube);
@@ -144,20 +144,21 @@ public:
 		// scale [0,1]
 		noiseVal = (noiseVal + 1) / 2;
 
-		//DebugThreshold(noiseVal);
+		DebugThreshold(noiseVal);
 
 		// adjust softness. e.g scale to [0, 0.5]
 		// scale
-		noiseVal = noiseVal / noiseSoftness;
+		//auto scaledNoisVal = noiseVal * noiseContrast;
 		// then "center" the noise noise range 
-		//noiseVal += noiseSoftness / 2;
+		//scaledNoisVal += ((noiseVal - scaledNoisVal) / 2);
 
 		// this pixel is a star based on probability
-		//auto rand = dis(gen);
-		//auto isStar = rand < starProbability;
-		auto isStar = true;
+		auto rand = dis(gen);
+		auto isStar = rand < starProbability;
+		//auto isStar = true;
 
 		// check if star and scale to color range [0,255]
+		noiseVal = 1;
 		uint8 colorValue = isStar ? (noiseVal * 255 / starBrightnessReduce) : 0;
 
 		// get color 
